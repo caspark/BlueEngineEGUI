@@ -26,6 +26,7 @@ impl Gui for MyGUI {
         _objects: &mut std::collections::HashMap<&'static str, blue_engine::Object>,
         _camera: &mut blue_engine::Camera,
         _input: &blue_engine::InputHelper,
+        _plugin_data_storage: &mut std::collections::HashMap<&'static str, Box<dyn std::any::Any>>,
         ui: &blue_engine_egui::egui::Ui,
     ) {
         /* Your UI code goes here */
