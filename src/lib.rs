@@ -12,6 +12,7 @@ pub trait Gui {
         _objects: &mut std::collections::HashMap<&'static str, Object>,
         _camera: &mut Camera,
         _input: &blue_engine::InputHelper,
+        _plugin_data_storage: &mut std::collections::HashMap<&'static str, Box<dyn std::any::Any>>,
         ui: &egui::Context,
     );
 }
@@ -70,21 +71,17 @@ impl EnginePlugin for EGUI {
         }
     }
 
-    /// Updates the egui with custom renderpass and renders UI code
     fn update(
         &mut self,
-        renderer: &mut Renderer,
-        window: &Win,
-        objects: &mut std::collections::HashMap<&'static str, Object>,
-        camera: &mut Camera,
+        renderer: &mut blue_engine::Renderer,
+        window: &blue_engine::Window,
+        objects: &mut std::collections::HashMap<&'static str, blue_engine::Object>,
+        camera: &mut blue_engine::Camera,
         input: &blue_engine::InputHelper,
+        plugin_data_storage: &mut std::collections::HashMap<&'static str, Box<dyn std::any::Any>>,
         encoder: &mut blue_engine::CommandEncoder,
         view: &blue_engine::TextureView,
     ) {
-        //self.platform
-        //    .update_time(self.start_time.elapsed().as_secs_f64());
-
-        //self.platform.begin_frame();
         //if renderer.surface.is_some() {
         let raw_input = self.platform.take_egui_input(&window);
         //}
@@ -95,8 +92,15 @@ impl EnginePlugin for EGUI {
             shapes,
             ..
         } = self.context.run(raw_input, |context| {
-            self.gui
-                .update(&window, renderer, objects, camera, &input, &context);
+            self.gui.update(
+                &window,
+                renderer,
+                objects,
+                camera,
+                &input,
+                plugin_data_storage,
+                &context,
+            );
         });
 
         self.platform
