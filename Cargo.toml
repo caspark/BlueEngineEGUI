@@ -1,6 +1,6 @@
 [package]
 name = "blue_engine_egui"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 description = "egui library for Blue Engine"
 keywords = ["gui", "blue_engine", "egui"]
@@ -12,11 +12,10 @@ license = "Apache-2.0"
 name = "blue_engine_egui"
 
 [dependencies]
-blue_engine = { version = "0.4.11" }
+blue_engine = { version = "0.4.12" }
 egui = "0.19"
-epi = "0.17"
-egui_winit_platform = "0.16"
-egui_wgpu_backend = "0.19"
+egui-winit = "0.19.0"
+egui-wgpu = { version = "0.19.0", features = ["winit"] }
 
 [[example]]
 name = "hello_gui"

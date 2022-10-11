@@ -30,6 +30,7 @@ impl Gui for MyGUI {
         // We can add underscore to ones we don't use, so they won't emit warnings
         objects: &mut std::collections::HashMap<&'static str, blue_engine::Object>,
         _camera: &mut blue_engine::Camera,
+        _input: &blue_engine::InputHelper,
         ui: &gui::Context,
     ) {
         gui::Window::new("title").show(ui, |ui| {
@@ -61,7 +62,7 @@ fn main() {
 
     // Start the egui context
     let gui_context =
-        blue_engine_egui::EGUI::new(&engine.window, &mut engine.renderer, Box::new(my_gui));
+        blue_engine_egui::EGUI::new(&engine.event_loop, &mut engine.renderer, Box::new(my_gui));
 
     // We add the gui as plugin, which runs once before everything else to fetch events, and once during render times for rendering and other stuff
     engine.plugins.push(Box::new(gui_context));

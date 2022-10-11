@@ -11,33 +11,28 @@ pub trait Gui {
         _renderer: &mut Renderer,
         _objects: &mut std::collections::HashMap<&'static str, Object>,
         _camera: &mut Camera,
+        _input: &blue_engine::InputHelper,
         ui: &egui::Context,
     );
 }
 
 /// The egui plugin
 pub struct EGUI {
-    pub platform: egui_winit_platform::Platform,
-    pub render_pass: egui_wgpu_backend::RenderPass,
-    pub start_time: std::time::Instant,
+    pub context: egui::Context,
+    pub platform: egui_winit::State,
+    pub renderer: egui_wgpu::renderer::RenderPass,
     pub gui: Box<dyn Gui>,
 }
 
 impl EGUI {
     /// Creates the egui context and platform details
-    pub fn new(window: &Win, renderer: &mut Renderer, gui: Box<dyn Gui>) -> Self {
-        let window_size = window.inner_size();
-
-        let platform =
-            egui_winit_platform::Platform::new(egui_winit_platform::PlatformDescriptor {
-                physical_width: window_size.width as u32,
-                physical_height: window_size.height as u32,
-                scale_factor: window.scale_factor(),
-                font_definitions: egui::FontDefinitions::default(),
-                style: Default::default(),
-            });
-
-        let egui_rpass = egui_wgpu_backend::RenderPass::new(
+    pub fn new(
+        event_loop: &blue_engine::EventLoop<()>,
+        renderer: &mut Renderer,
+        gui: Box<dyn Gui>,
+    ) -> Self {
+        let platform = egui_winit::State::new(event_loop);
+        let renderer = egui_wgpu::renderer::RenderPass::new(
             &renderer.device,
             renderer
                 .surface
@@ -47,12 +42,10 @@ impl EGUI {
             1,
         );
 
-        let start_time = std::time::Instant::now();
-
         Self {
+            context: Default::default(),
             platform,
-            render_pass: egui_rpass,
-            start_time,
+            renderer,
             gui,
         }
     }
@@ -69,8 +62,11 @@ impl EnginePlugin for EGUI {
         _input: &blue_engine::InputHelper,
         _camera: &mut Camera,
     ) {
-        if _renderer.surface.is_some() {
-            self.platform.handle_event(&_events);
+        match _events {
+            blue_engine::Event::WindowEvent { event, .. } => {
+                self.platform.on_event(&self.context, event);
+            }
+            _ => {}
         }
     }
 
@@ -81,29 +77,45 @@ impl EnginePlugin for EGUI {
         window: &Win,
         objects: &mut std::collections::HashMap<&'static str, Object>,
         camera: &mut Camera,
+        input: &blue_engine::InputHelper,
         encoder: &mut blue_engine::CommandEncoder,
         view: &blue_engine::TextureView,
     ) {
+        //self.platform
+        //    .update_time(self.start_time.elapsed().as_secs_f64());
+
+        //self.platform.begin_frame();
+        //if renderer.surface.is_some() {
+        let raw_input = self.platform.take_egui_input(&window);
+        //}
+
+        let egui::FullOutput {
+            platform_output,
+            textures_delta,
+            shapes,
+            ..
+        } = self.context.run(raw_input, |context| {
+            self.gui
+                .update(&window, renderer, objects, camera, &input, &context);
+        });
+
         self.platform
-            .update_time(self.start_time.elapsed().as_secs_f64());
+            .handle_platform_output(&window, &self.context, platform_output);
 
-        self.platform.begin_frame();
-        self.gui
-            .update(&window, renderer, objects, camera, &self.platform.context());
+        let paint_jobs = self.context.tessellate(shapes);
 
-        let full_output = self.platform.end_frame(Some(&window));
-        let paint_jobs = self.platform.context().tessellate(full_output.shapes);
-
-        let screen_descriptor = egui_wgpu_backend::ScreenDescriptor {
-            physical_width: renderer.config.width,
-            physical_height: renderer.config.height,
-            scale_factor: window.scale_factor() as f32,
+        let screen_descriptor = egui_wgpu::renderer::ScreenDescriptor {
+            size_in_pixels: [renderer.config.width, renderer.config.height],
+            pixels_per_point: self.platform.pixels_per_point(),
         };
-        let tdelta: egui::TexturesDelta = full_output.textures_delta;
-        self.render_pass
-            .add_textures(&renderer.device, &renderer.queue, &tdelta)
-            .expect("add texture ok");
-        self.render_pass.update_buffers(
+
+        //self.render_pass
+        //    .update_texture(&renderer.device, &renderer.queue, &tdelta);
+        for (id, image_delta) in &textures_delta.set {
+            self.renderer
+                .update_texture(&renderer.device, &renderer.queue, *id, image_delta);
+        }
+        self.renderer.update_buffers(
             &renderer.device,
             &renderer.queue,
             &paint_jobs,
@@ -124,9 +136,11 @@ impl EnginePlugin for EGUI {
                 depth_stencil_attachment: None,
             });
 
-            self.render_pass
-                .execute_with_renderpass(&mut render_pass, &paint_jobs, &screen_descriptor)
-                .unwrap();
+            self.renderer.execute_with_renderpass(
+                &mut render_pass,
+                &paint_jobs,
+                &screen_descriptor,
+            );
         }
     }
 }
