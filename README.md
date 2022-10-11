@@ -25,6 +25,7 @@ impl Gui for MyGUI {
         _renderer: &mut blue_engine::Renderer,
         _objects: &mut std::collections::HashMap<&'static str, blue_engine::Object>,
         _camera: &mut blue_engine::Camera,
+        _input: &blue_engine::InputHelper,
         ui: &blue_engine_egui::egui::Ui,
     ) {
         /* Your UI code goes here */
@@ -50,7 +51,7 @@ blue_engine_egui::egui::Window::new("Counter Window").show(ui, |ui| {
 One more steps is left to be done to have the plugin working. We need to initialize the plugin before update loop:
 
 ```rust
-let gui_context = blue_engine_egui::EGUI::new(&engine.window, &mut engine.renderer, Box::new(MyGui {count: 0}));
+let gui_context = blue_engine_egui::EGUI::new(&engine.event_loop, &mut engine.renderer, Box::new(MyGui {count: 0}));
 ```
 
 This will essentially initializes the egui and create things required to run the plugin. The engine will then run it twice, once before everything else to fetch all inputs and events, and then during render, so that it displays the GUI. And all that's left, is to add the plugin to the engine:
@@ -72,6 +73,6 @@ Check the [examples](https://github.com/AryanpurTech/BlueEngineEGUI/tree/master/
 ## Dependency justification
 
 * `blue_engine`: Used obiously for exporting some components and struct declrations required to design the API
-* `egui_wgpu_backend`: Used to assist in applying egui to wgpu graphics backend. Which is same graphics backend used in Blue Engine.
-* `egui_winit_platform`: Support for Winit windowing. Which is same windowing system used in Blue Engine.
-* `egui` and `epi`: The egui itself, required to obtain components and declrations for api design.
+* `egui-wgpu`: Used to assist in applying egui to wgpu graphics backend. Which is same graphics backend used in Blue Engine.
+* `egui-winit`: Support for Winit windowing. Which is same windowing system used in Blue Engine.
+* `egui`: The egui itself, required to obtain components and declrations for api design.
