@@ -36,12 +36,12 @@ And finally your EGUI code:
 
 ```rust
 // Create a new egui window to contain the UI
-gui::Window::new("Counter Window").build(ui, || {
+blue_engine_egui::egui::Window::new("Counter Window").show(ui, |ui| {
     // Add a text to display the counter
     ui.text(format!("The count is at: {}", self.count));
     
     // + 1 per click
-    if ui.button("Add 1") {
+    if ui.button("Add 1").clicked() {
         self.count += 1;
     }
 });

@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 description = "egui library for Blue Engine"
 keywords = ["gui", "blue_engine", "egui"]
-categories = ["gui", "game-development", "game-engines", "rendering", "game"]
+categories = ["gui", "game-development", "game-engines", "rendering"]
 repository = "https://github.com/AryanpurTech/BlueEngineEGUI"
 license = "Apache-2.0"
 
