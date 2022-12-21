@@ -20,7 +20,7 @@ fn main() {
     let mut engine = Engine::new(WindowDescriptor::default()).expect("win");
 
     // Add a triangle to the screen
-    triangle("triangle", ObjectSettings::default(), &mut engine).unwrap();
+    triangle("triangle", ObjectSettings::default(), &mut engine.renderer, &mut engine.objects).unwrap();
 
     // Start the egui context
     let gui_context = blue_engine_egui::EGUI::new(&engine.event_loop, &mut engine.renderer);
