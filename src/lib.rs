@@ -1,4 +1,4 @@
-use blue_engine::{wgpu, Camera, EnginePlugin, Object, Renderer, Window as Win, DEPTH_FORMAT};
+use blue_engine::{wgpu, Camera, EnginePlugin, Renderer, Window as Win, DEPTH_FORMAT, ObjectStorage};
 
 pub use egui;
 
@@ -47,7 +47,7 @@ impl EnginePlugin for EGUI {
         &mut self,
         _renderer: &mut Renderer,
         _window: &Win,
-        _objects: &mut std::collections::HashMap<&'static str, Object>,
+        _objects: &mut ObjectStorage,
         _events: &blue_engine::Event<()>,
         _input: &blue_engine::InputHelper,
         _camera: &mut Camera,
@@ -65,7 +65,7 @@ impl EnginePlugin for EGUI {
         &mut self,
         renderer: &mut blue_engine::Renderer,
         window: &blue_engine::Window,
-        _objects: &mut std::collections::HashMap<&'static str, blue_engine::Object>,
+        _objects: &mut ObjectStorage,
         _camera: &mut blue_engine::Camera,
         _input: &blue_engine::InputHelper,
         encoder: &mut blue_engine::CommandEncoder,
