@@ -17,7 +17,6 @@ blue_engine = { version = "0.4", default-features = false }
 egui = "0.20.1"
 egui-winit = "0.20.1"
 egui-wgpu = { version = "0.20.0", features = ["winit"] }
-bytemuck = "*"
 
 [[example]]
 name = "hello_gui"
