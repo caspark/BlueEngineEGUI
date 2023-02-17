@@ -14,7 +14,7 @@ use blue_engine_egui::egui;
 // Basic imports
 use blue_engine::{
     header::{Engine, ObjectSettings, WindowDescriptor},
-    primitive_shapes::triangle,
+    primitive_shapes::cube,
     utils::default_resources::{DEFAULT_COLOR, DEFAULT_MATRIX_4, DEFAULT_SHADER, DEFAULT_TEXTURE},
     wgpu::{self, util::DeviceExt},
     Object, ObjectStorage, Renderer, UniformBuffers, Vertex, VertexBuffers,
@@ -55,10 +55,7 @@ impl TriangleRenderResources {
     }
 }
 
-pub struct Custom3d {
-    angle: f32,
-}
-
+pub struct Custom3d {}
 impl Custom3d {
     pub fn new(
         object: &mut Object,
@@ -87,7 +84,6 @@ impl Custom3d {
                 "Default Texture",
                 blue_engine::TextureData::Bytes(DEFAULT_TEXTURE.to_vec()),
                 blue_engine::header::TextureMode::Clamp,
-                //crate::header::TextureFormat::PNG
             )
             .unwrap();
 
@@ -123,7 +119,7 @@ impl Custom3d {
                 camera_data: camera_data.0,
             });
 
-        Some(Self { angle: 0.0 })
+        Some(Self {})
     }
 
     fn prepare(
@@ -131,6 +127,7 @@ impl Custom3d {
         object: &mut Object,
         brenderer: &mut blue_engine::Renderer,
         renderer: &mut egui_wgpu::Renderer,
+        camera_data: crate::UniformBuffers,
     ) {
         let object_pipeline = object.update_and_return(brenderer).unwrap();
 
@@ -140,30 +137,12 @@ impl Custom3d {
         resources.vertex_buffer = object_pipeline.0;
         resources.uniform = object_pipeline.1;
         resources.shader = object_pipeline.2;
+        resources.camera_data = camera_data;
     }
 
     fn custom_painting(&mut self, ui: &mut egui::Ui) {
-        let (rect, response) =
+        let (rect, _response) =
             ui.allocate_exact_size(egui::Vec2::splat(300.0), egui::Sense::drag());
-
-        self.angle += response.drag_delta().x * 0.01;
-
-        // Clone locals so we can move them into the paint callback:
-        let angle = self.angle;
-
-        // The callback function for WGPU is in two stages: prepare, and paint.
-        //
-        // The prepare callback is called every frame before paint and is given access to the wgpu
-        // Device and Queue, which can be used, for instance, to update buffers and uniforms before
-        // rendering.
-        //
-        // You can use the main `CommandEncoder` that is passed-in, return an arbitrary number
-        // of user-defined `CommandBuffer`s, or both.
-        // The main command buffer, as well as all user-defined ones, will be submitted together
-        // to the GPU in a single call.
-        //
-        // The paint callback is called after prepare and is given access to the render pass, which
-        // can be used to issue draw commands.
 
         let cb = egui_wgpu::CallbackFn::new().paint(
             move |_info, render_pass, paint_callback_resources| {
@@ -185,19 +164,14 @@ fn main() {
     // Initialize the engine with default settings
     let mut engine = Engine::new(WindowDescriptor::default()).expect("win");
 
-    triangle(
-        "trig",
-        Default::default(),
-        &mut engine.renderer,
-        &mut engine.objects,
-    );
+    cube("trig", &mut engine.renderer, &mut engine.objects);
 
     // Start the egui context
     let mut gui_context = blue_engine_egui::EGUI::new(&engine.event_loop, &mut engine.renderer);
-    let uniform_data = &engine.camera.uniform_data;
 
     let mut custom_rendering = {
         let mut object = engine.objects.get_mut("trig").unwrap();
+        object.is_visible = false;
         Custom3d::new(&mut object, &mut engine.renderer, &mut gui_context.renderer).unwrap()
     };
 
@@ -205,10 +179,12 @@ fn main() {
     engine.plugins.push(Box::new(gui_context));
 
     let mut color = [1f32, 1f32, 1f32, 1f32];
+    let radius = 5f32;
+    let start = std::time::SystemTime::now();
 
     // Update loop
     engine
-        .update_loop(move |renderer, window, objects, _, _, plugins| {
+        .update_loop(move |renderer, window, objects, _, camera, plugins| {
             // obtain the plugin
             let egui_plugin = plugins[0]
                 // downcast it to obtain the plugin
@@ -216,8 +192,8 @@ fn main() {
                 .expect("Plugin not found");
 
             let trig = objects.get_mut("trig").unwrap();
-
-            custom_rendering.prepare(trig, renderer, &mut egui_plugin.renderer);
+            let camera_data = camera.update_view_projection_and_return(renderer).unwrap();
+            custom_rendering.prepare(trig, renderer, &mut egui_plugin.renderer, camera_data);
             // ui function will provide the context
             egui_plugin.ui(
                 |ctx| {
@@ -237,6 +213,13 @@ fn main() {
 
             trig.set_uniform_color(color[0], color[1], color[2], color[3])
                 .unwrap();
+
+            let camx = start.elapsed().unwrap().as_secs_f32().sin() * radius;
+            let camy = start.elapsed().unwrap().as_secs_f32().sin() * radius;
+            let camz = start.elapsed().unwrap().as_secs_f32().cos() * radius;
+            camera
+                .set_position(camx, camy, camz)
+                .expect("Couldn't update the camera eye");
         })
         .expect("Error during update loop");
 }
