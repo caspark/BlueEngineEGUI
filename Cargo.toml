@@ -1,6 +1,6 @@
 [package]
 name = "blue_engine_egui"
-version = "0.4.1"
+version = "0.4.2"
 edition = "2021"
 description = "egui library for Blue Engine"
 keywords = ["gui", "blue_engine", "egui"]
