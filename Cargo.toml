@@ -12,8 +12,8 @@ license = "Apache-2.0"
 name = "blue_engine_egui"
 
 [dependencies]
-#blue_engine = { version = "0.4", default-features = false }
-blue_engine = { path = "../Blue Engine", default-features = false }
+blue_engine = { version = "0.4", default-features = false }
+#blue_engine = { path = "../Blue Engine", default-features = false }
 egui = "0.20.1"
 egui-winit = "0.20.1"
 egui-wgpu = { version = "0.20.0", features = ["winit"] }
