@@ -1,6 +1,6 @@
 # Blue Engine egui plugin
 
-This is a plugin that adds [egui](egui.rs/) support to the [Blue Engine](https://githb.com/AryanpurTech/BlueEngine).
+This is a plugin that adds [egui](egui.rs/) support to the [Blue Engine](https://github.com/AryanpurTech/BlueEngine).
 
 ## Getting started
 
